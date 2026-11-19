@@ -1,0 +1,2750 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#050508" />
+  <meta name="description" content="TINYSHINEE // ПОТЕРЯННЫЙ СИГНАЛ — интерактивный ночной архив и квест к новому релизу." />
+  <title>TINYSHINEE // ПОТЕРЯННЫЙ СИГНАЛ</title>
+
+  <!-- Google Fonts: Cormorant Garamond (поэтические заголовки и история) & JetBrains Mono (студийный интерфейс) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet" />
+
+  <style>
+    /* ==========================================================================
+       1. ДИЗАЙН-ТОКЕНЫ И ПАЛИТРА (LO-FI CYBER-NOIR / НОЧНАЯ СТУДИЯ)
+       ========================================================================== */
+    :root {
+      --bg-void: #050508;
+      --bg-charcoal: #0d0e14;
+      --bg-surface: rgba(16, 18, 26, 0.78);
+      --bg-surface-strong: rgba(13, 14, 20, 0.94);
+      --border-subtle: rgba(108, 114, 138, 0.22);
+      --border-glow: rgba(122, 162, 184, 0.45);
+      --text-primary: #e4e6ef;
+      --text-muted: #6c728a;
+      --text-soft: #a7adc4;
+      --accent-crimson: #9e2a3b;
+      --accent-crimson-bright: #c93b50;
+      --accent-crimson-glow: rgba(158, 42, 59, 0.36);
+      --accent-cyan: #7aa2b8;
+      --accent-cyan-bright: #9ec8df;
+      --accent-cyan-glow: rgba(122, 162, 184, 0.3);
+
+      --font-serif: 'Cormorant Garamond', Georgia, 'Times New Roman', serif;
+      --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+
+      --radius-sm: 8px;
+      --radius-md: 14px;
+      --radius-lg: 20px;
+      --transition-smooth: 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    /* ==========================================================================
+       2. БАЗОВЫЙ СБРОС И ОБЩИЕ СТИЛИ
+       ========================================================================== */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html {
+      font-size: 16px;
+      background-color: var(--bg-void);
+      color: var(--text-primary);
+      scroll-behavior: smooth;
+      overflow-x: hidden;
+    }
+
+    body {
+      min-height: 100vh;
+      min-height: 100dvh;
+      background:
+        radial-gradient(ellipse at 18% 12%, rgba(122, 162, 184, 0.08) 0%, transparent 55%),
+        radial-gradient(ellipse at 85% 82%, rgba(158, 42, 59, 0.09) 0%, transparent 52%),
+        var(--bg-void);
+      color: var(--text-primary);
+      font-family: var(--font-mono);
+      line-height: 1.6;
+      overflow-x: hidden;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ==========================================================================
+       3. ФОНОВЫЙ CANVAS, СКАНЛАЙНЫ И ВИНЬЕТКА
+       ========================================================================== */
+    #bg-canvas {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    /* Тонкий аналоговый слой сканлайнов и мягкой виньетки */
+    .analog-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 1;
+      pointer-events: none;
+      background:
+        repeating-linear-gradient(
+          to bottom,
+          rgba(255, 255, 255, 0.015) 0px,
+          rgba(255, 255, 255, 0.015) 1px,
+          transparent 1px,
+          transparent 3px
+        ),
+        radial-gradient(circle at center, transparent 42%, rgba(2, 2, 5, 0.78) 100%);
+    }
+
+    /* Едва заметная пульсация аналоговой плёнки */
+    .film-flicker {
+      position: fixed;
+      inset: 0;
+      z-index: 1;
+      pointer-events: none;
+      background: radial-gradient(circle at 50% 30%, rgba(122, 162, 184, 0.028), transparent 65%);
+      animation: subtleFlicker 7s ease-in-out infinite alternate;
+    }
+
+    @keyframes subtleFlicker {
+      0% { opacity: 0.45; }
+      45% { opacity: 0.85; }
+      52% { opacity: 0.55; }
+      100% { opacity: 0.9; }
+    }
+
+    /* ==========================================================================
+       4. ВЕРХНЯЯ ПАНЕЛЬ НАВИГАЦИИ
+       ========================================================================== */
+    .top-bar {
+      position: sticky;
+      top: 0;
+      z-index: 30;
+      width: 100%;
+      background: rgba(5, 5, 8, 0.78);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .top-bar-inner {
+      max-width: 780px;
+      margin: 0 auto;
+      padding: 0.75rem 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+    }
+
+    .brand-mark {
+      display: flex;
+      align-items: center;
+      gap: 0.55rem;
+      text-decoration: none;
+      color: var(--text-primary);
+      letter-spacing: 0.22em;
+      font-size: 0.78rem;
+      font-weight: 500;
+      white-space: nowrap;
+    }
+
+    .status-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--accent-crimson-bright);
+      box-shadow: 0 0 10px var(--accent-crimson-bright);
+      animation: pulseDot 2.8s ease-in-out infinite;
+      flex-shrink: 0;
+    }
+
+    .status-dot.restored {
+      background: var(--accent-cyan-bright);
+      box-shadow: 0 0 10px var(--accent-cyan-bright);
+    }
+
+    @keyframes pulseDot {
+      0%, 100% { opacity: 0.4; transform: scale(0.92); }
+      50% { opacity: 1; transform: scale(1.15); }
+    }
+
+    .top-controls {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .progress-pill {
+      font-size: 0.72rem;
+      letter-spacing: 0.12em;
+      color: var(--text-soft);
+      padding: 0.35rem 0.6rem;
+      border-radius: 999px;
+      background: rgba(13, 14, 20, 0.85);
+      border: 1px solid var(--border-subtle);
+      white-space: nowrap;
+    }
+
+    .icon-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.42rem;
+      min-height: 36px;
+      min-width: 36px;
+      padding: 0.4rem 0.7rem;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border-subtle);
+      background: rgba(18, 20, 30, 0.72);
+      color: var(--text-primary);
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      letter-spacing: 0.06em;
+      cursor: pointer;
+      transition: border-color 0.25s ease, background 0.25s ease, color 0.25s ease, transform 0.15s ease;
+    }
+
+    .icon-btn:hover {
+      border-color: var(--accent-cyan);
+      background: rgba(24, 28, 40, 0.92);
+    }
+
+    .icon-btn:active {
+      transform: scale(0.96);
+    }
+
+    .icon-btn.sound-on {
+      border-color: rgba(122, 162, 184, 0.5);
+      color: var(--accent-cyan-bright);
+    }
+
+    .icon-btn svg {
+      width: 15px;
+      height: 15px;
+      flex-shrink: 0;
+    }
+
+    .btn-label-hide-xs {
+      display: inline;
+    }
+
+    .header-progress-track {
+      width: 100%;
+      height: 2px;
+      background: rgba(108, 114, 138, 0.14);
+      overflow: hidden;
+    }
+
+    .header-progress-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--accent-crimson), var(--accent-cyan));
+      transition: width 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    /* ==========================================================================
+       5. ОСНОВНОЙ КОНТЕЙНЕР И ПЕРЕХОДЫ МЕЖДУ АКТАМИ
+       ========================================================================== */
+    .stage-wrapper {
+      position: relative;
+      z-index: 10;
+      flex: 1;
+      width: 100%;
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 1.5rem 1rem 3.25rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .stage {
+      display: none;
+      opacity: 0;
+      transform: translateY(16px);
+      transition: opacity 0.6s ease, transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .stage.active {
+      display: block;
+    }
+
+    .stage.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* Карточка акта */
+    .archive-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: 1.65rem 1.35rem;
+      box-shadow:
+        0 20px 60px rgba(0, 0, 0, 0.65),
+        inset 0 1px 0 rgba(228, 230, 239, 0.05);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .archive-card::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(122, 162, 184, 0.35), rgba(158, 42, 59, 0.35), transparent);
+    }
+
+    /* Типографика внутри актов */
+    .meta-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.7rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--accent-cyan);
+      margin-bottom: 0.85rem;
+    }
+
+    .meta-tag .tag-accent {
+      color: var(--accent-crimson-bright);
+    }
+
+    .act-title {
+      font-family: var(--font-serif);
+      font-weight: 500;
+      font-size: clamp(2rem, 6.5vw, 2.85rem);
+      line-height: 1.12;
+      letter-spacing: 0.02em;
+      color: var(--text-primary);
+      margin-bottom: 1.15rem;
+    }
+
+    .story-block {
+      font-family: var(--font-serif);
+      font-size: clamp(1.16rem, 3.8vw, 1.34rem);
+      line-height: 1.68;
+      color: #d6d9e6;
+      margin-bottom: 1.45rem;
+    }
+
+    .story-block p + p {
+      margin-top: 0.85rem;
+    }
+
+    .story-track-ref {
+      color: var(--text-primary);
+      font-style: italic;
+      border-bottom: 1px solid rgba(158, 42, 59, 0.55);
+      padding-bottom: 1px;
+    }
+
+    .story-clue {
+      color: var(--accent-cyan-bright);
+      font-style: italic;
+      text-shadow: 0 0 12px rgba(122, 162, 184, 0.25);
+    }
+
+    /* ==========================================================================
+       6. КНОПКИ И ЭЛЕМЕНТЫ УПРАВЛЕНИЯ
+       ========================================================================== */
+    .btn-primary {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.6rem;
+      width: 100%;
+      min-height: 50px;
+      padding: 0.85rem 1.4rem;
+      border-radius: var(--radius-md);
+      border: 1px solid rgba(122, 162, 184, 0.45);
+      background: linear-gradient(135deg, rgba(26, 33, 46, 0.95), rgba(16, 18, 28, 0.98));
+      color: var(--text-primary);
+      font-family: var(--font-mono);
+      font-size: 0.82rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      cursor: pointer;
+      box-shadow: 0 8px 26px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+      transition: all 0.28s ease;
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      border-color: var(--accent-cyan-bright);
+      box-shadow: 0 0 24px var(--accent-cyan-glow), 0 10px 28px rgba(0, 0, 0, 0.55);
+      transform: translateY(-1px);
+    }
+
+    .btn-primary:active:not(:disabled) {
+      transform: translateY(0) scale(0.985);
+    }
+
+    .btn-primary:disabled {
+      opacity: 0.42;
+      cursor: not-allowed;
+      border-color: var(--border-subtle);
+    }
+
+    .btn-primary.crimson {
+      border-color: rgba(158, 42, 59, 0.65);
+      background: linear-gradient(135deg, rgba(64, 18, 27, 0.92), rgba(22, 12, 18, 0.96));
+    }
+
+    .btn-primary.crimson:hover:not(:disabled) {
+      border-color: var(--accent-crimson-bright);
+      box-shadow: 0 0 26px var(--accent-crimson-glow), 0 10px 28px rgba(0, 0, 0, 0.55);
+    }
+
+    .btn-ghost {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.45rem;
+      min-height: 40px;
+      padding: 0.55rem 0.95rem;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border-subtle);
+      background: rgba(13, 14, 20, 0.55);
+      color: var(--text-soft);
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      letter-spacing: 0.08em;
+      cursor: pointer;
+      transition: all 0.25s ease;
+    }
+
+    .btn-ghost:hover {
+      color: var(--text-primary);
+      border-color: rgba(122, 162, 184, 0.42);
+      background: rgba(20, 23, 34, 0.85);
+    }
+
+    /* Блок подсказки */
+    .hint-area {
+      margin-top: 1rem;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0.6rem;
+    }
+
+    .hint-box {
+      display: none;
+      width: 100%;
+      padding: 0.8rem 0.95rem;
+      border-radius: var(--radius-sm);
+      border-left: 2px solid var(--accent-cyan);
+      background: rgba(122, 162, 184, 0.08);
+      color: var(--text-soft);
+      font-size: 0.76rem;
+      line-height: 1.55;
+      animation: fadeInSoft 0.35s ease;
+    }
+
+    .hint-box.open {
+      display: block;
+    }
+
+    @keyframes fadeInSoft {
+      from { opacity: 0; transform: translateY(-4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Разблокированный фрагмент дневника продюсера */
+    .diary-unlock {
+      display: none;
+      margin-top: 1.35rem;
+      padding: 1.15rem 1.1rem;
+      border-radius: var(--radius-md);
+      background: linear-gradient(160deg, rgba(122, 162, 184, 0.09), rgba(158, 42, 59, 0.06));
+      border: 1px solid rgba(122, 162, 184, 0.35);
+      animation: unlockSlide 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .diary-unlock.show {
+      display: block;
+    }
+
+    @keyframes unlockSlide {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .diary-label {
+      font-size: 0.68rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--accent-cyan-bright);
+      margin-bottom: 0.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.45rem;
+    }
+
+    .diary-text {
+      font-family: var(--font-serif);
+      font-style: italic;
+      font-size: 1.15rem;
+      line-height: 1.58;
+      color: var(--text-primary);
+      margin-bottom: 1.1rem;
+    }
+
+    /* ==========================================================================
+       7. ВСТУПИТЕЛЬНЫЙ ЭКРАН (INTRO)
+       ========================================================================== */
+    .intro-card {
+      text-align: center;
+      padding: 2.4rem 1.4rem;
+    }
+
+    .tape-emblem {
+      width: 82px;
+      height: 82px;
+      margin: 0 auto 1.45rem;
+      border-radius: 50%;
+      border: 1px solid rgba(122, 162, 184, 0.32);
+      background: radial-gradient(circle, rgba(158, 42, 59, 0.14) 0%, rgba(13, 14, 20, 0.9) 70%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      box-shadow: 0 0 38px rgba(158, 42, 59, 0.18);
+    }
+
+    .tape-emblem::after {
+      content: "";
+      position: absolute;
+      inset: -7px;
+      border-radius: 50%;
+      border: 1px dashed rgba(108, 114, 138, 0.28);
+      animation: spinSlow 24s linear infinite;
+    }
+
+    @keyframes spinSlow {
+      to { transform: rotate(360deg); }
+    }
+
+    .intro-title {
+      font-family: var(--font-serif);
+      font-weight: 500;
+      font-size: clamp(2.15rem, 7.5vw, 3.3rem);
+      letter-spacing: 0.06em;
+      line-height: 1.1;
+      margin-bottom: 0.6rem;
+    }
+
+    .intro-sub-artist {
+      font-size: 0.74rem;
+      letter-spacing: 0.26em;
+      color: var(--accent-crimson-bright);
+      text-transform: uppercase;
+      margin-bottom: 1.5rem;
+    }
+
+    .intro-desc {
+      max-width: 520px;
+      margin: 0 auto 1.9rem;
+      font-family: var(--font-serif);
+      font-size: clamp(1.18rem, 4vw, 1.38rem);
+      line-height: 1.62;
+      color: #d2d6e4;
+    }
+
+    .intro-footnote {
+      margin-top: 1rem;
+      font-size: 0.69rem;
+      color: var(--text-muted);
+      letter-spacing: 0.06em;
+    }
+
+    /* ==========================================================================
+       8. АКТ I: ЧАСТОТНЫЙ ТЮНЕР И ОСЦИЛЛОГРАФ
+       ========================================================================== */
+    .puzzle-box {
+      background: rgba(7, 8, 13, 0.78);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 1.1rem;
+    }
+
+    .puzzle-caption {
+      font-size: 0.74rem;
+      color: var(--text-soft);
+      margin-bottom: 0.9rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .osc-wrap {
+      position: relative;
+      width: 100%;
+      height: 155px;
+      border-radius: var(--radius-sm);
+      border: 1px solid rgba(108, 114, 138, 0.25);
+      background:
+        linear-gradient(rgba(122, 162, 184, 0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(122, 162, 184, 0.04) 1px, transparent 1px),
+        #05060a;
+      background-size: 24px 24px;
+      overflow: hidden;
+      margin-bottom: 1rem;
+    }
+
+    #osc-canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+
+    .osc-hud {
+      position: absolute;
+      top: 0.55rem;
+      left: 0.7rem;
+      right: 0.7rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      pointer-events: none;
+      font-size: 0.72rem;
+    }
+
+    .freq-display {
+      color: var(--text-primary);
+      background: rgba(5, 5, 8, 0.72);
+      padding: 0.2rem 0.5rem;
+      border-radius: 6px;
+      border: 1px solid var(--border-subtle);
+    }
+
+    .freq-display.locked {
+      color: var(--accent-cyan-bright);
+      border-color: var(--accent-cyan);
+      box-shadow: 0 0 12px var(--accent-cyan-glow);
+    }
+
+    .signal-status {
+      font-size: 0.68rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--accent-crimson-bright);
+    }
+
+    .signal-status.near {
+      color: #d6b67c;
+    }
+
+    .signal-status.locked {
+      color: var(--accent-cyan-bright);
+    }
+
+    /* Полоса захвата сигнала */
+    .lock-meter-wrap {
+      margin-bottom: 1rem;
+    }
+
+    .lock-meter-head {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.69rem;
+      color: var(--text-muted);
+      margin-bottom: 0.35rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .lock-meter-bar {
+      height: 6px;
+      width: 100%;
+      border-radius: 999px;
+      background: rgba(108, 114, 138, 0.18);
+      overflow: hidden;
+    }
+
+    .lock-meter-fill {
+      height: 100%;
+      width: 0%;
+      border-radius: 999px;
+      background: linear-gradient(90deg, var(--accent-crimson), var(--accent-cyan-bright));
+      transition: width 0.12s linear;
+    }
+
+    /* Слайдер настройки частоты с кнопками точной подстройки */
+    .tuner-controls {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      margin-bottom: 1rem;
+    }
+
+    .nudge-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border-subtle);
+      background: rgba(18, 20, 30, 0.9);
+      color: var(--text-primary);
+      font-family: var(--font-mono);
+      font-size: 1.05rem;
+      cursor: pointer;
+      flex-shrink: 0;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+    }
+
+    .nudge-btn:hover {
+      border-color: var(--accent-cyan);
+      color: var(--accent-cyan-bright);
+    }
+
+    .nudge-btn:active {
+      transform: scale(0.93);
+    }
+
+    .freq-slider {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 100%;
+      height: 8px;
+      border-radius: 999px;
+      background: linear-gradient(90deg, rgba(158, 42, 59, 0.35), rgba(122, 162, 184, 0.35));
+      outline: none;
+      touch-action: pan-y;
+    }
+
+    .freq-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      background: var(--text-primary);
+      border: 3px solid var(--accent-cyan);
+      box-shadow: 0 0 14px rgba(122, 162, 184, 0.6);
+      cursor: grab;
+      transition: transform 0.15s ease;
+    }
+
+    .freq-slider::-webkit-slider-thumb:active {
+      cursor: grabbing;
+      transform: scale(1.12);
+    }
+
+    .freq-slider::-moz-range-thumb {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      background: var(--text-primary);
+      border: 3px solid var(--accent-cyan);
+      box-shadow: 0 0 14px rgba(122, 162, 184, 0.6);
+      cursor: grab;
+    }
+
+    /* ==========================================================================
+       9. АКТ II: ПЭДЫ ПАМЯТИ (MEMORY PADS)
+       ========================================================================== */
+    .sequence-slots {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+    }
+
+    .seq-slot {
+      padding: 0.45rem 0.35rem;
+      text-align: center;
+      border-radius: var(--radius-sm);
+      border: 1px dashed rgba(108, 114, 138, 0.32);
+      background: rgba(13, 14, 20, 0.65);
+      font-size: 0.68rem;
+      color: var(--text-muted);
+      letter-spacing: 0.06em;
+      transition: all 0.3s ease;
+    }
+
+    .seq-slot.filled {
+      border-style: solid;
+      border-color: var(--accent-cyan);
+      background: rgba(122, 162, 184, 0.14);
+      color: var(--accent-cyan-bright);
+      box-shadow: 0 0 14px rgba(122, 162, 184, 0.18);
+    }
+
+    .seq-slot.error {
+      border-style: solid;
+      border-color: var(--accent-crimson-bright);
+      background: rgba(158, 42, 59, 0.18);
+      color: #f39aa7;
+    }
+
+    .pads-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0.75rem;
+    }
+
+    .memory-pad {
+      position: relative;
+      min-height: 108px;
+      padding: 1rem 0.85rem;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border-subtle);
+      background: linear-gradient(155deg, rgba(20, 22, 33, 0.9), rgba(10, 11, 17, 0.95));
+      color: var(--text-primary);
+      font-family: var(--font-mono);
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 0.55rem;
+      overflow: hidden;
+      transition: all 0.24s ease;
+    }
+
+    .memory-pad:hover:not(:disabled) {
+      border-color: rgba(122, 162, 184, 0.55);
+      transform: translateY(-2px);
+      box-shadow: 0 10px 24px rgba(0, 0, 0, 0.45);
+    }
+
+    .memory-pad:active:not(:disabled),
+    .memory-pad.lit {
+      transform: scale(0.97);
+      border-color: var(--accent-cyan-bright);
+      background: linear-gradient(155deg, rgba(35, 50, 64, 0.95), rgba(14, 18, 28, 0.98));
+      box-shadow: 0 0 26px var(--accent-cyan-glow);
+    }
+
+    .memory-pad.confirmed {
+      border-color: rgba(122, 162, 184, 0.7);
+      background: linear-gradient(155deg, rgba(24, 38, 50, 0.9), rgba(12, 15, 23, 0.96));
+    }
+
+    .memory-pad.wrong {
+      border-color: var(--accent-crimson-bright);
+      box-shadow: 0 0 22px var(--accent-crimson-glow);
+      animation: padShake 0.34s ease;
+    }
+
+    @keyframes padShake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-5px); }
+      75% { transform: translateX(5px); }
+    }
+
+    .memory-pad svg {
+      width: 24px;
+      height: 24px;
+      color: var(--accent-cyan);
+    }
+
+    .pad-name {
+      font-size: 0.85rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    .pad-sub {
+      font-size: 0.64rem;
+      color: var(--text-muted);
+      letter-spacing: 0.08em;
+    }
+
+    .pad-feedback {
+      min-height: 1.4rem;
+      margin-top: 0.8rem;
+      font-size: 0.73rem;
+      color: var(--text-soft);
+      text-align: center;
+    }
+
+    .pad-feedback.err {
+      color: #e47d8d;
+    }
+
+    .pad-feedback.ok {
+      color: var(--accent-cyan-bright);
+    }
+
+    /* ==========================================================================
+       10. АКТ III: ДЕШИФРОВКА СТУДИЙНОГО ЛОГА
+       ========================================================================== */
+    .integrity-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.72rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      margin-bottom: 0.45rem;
+      color: var(--text-soft);
+    }
+
+    .integrity-bar {
+      height: 6px;
+      border-radius: 999px;
+      background: rgba(108, 114, 138, 0.18);
+      overflow: hidden;
+      margin-bottom: 1.1rem;
+    }
+
+    .integrity-fill {
+      height: 100%;
+      width: 25%;
+      background: linear-gradient(90deg, var(--accent-crimson), var(--accent-cyan-bright));
+      transition: width 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .log-terminal {
+      background: rgba(5, 6, 10, 0.9);
+      border: 1px solid rgba(108, 114, 138, 0.25);
+      border-radius: var(--radius-sm);
+      padding: 1.15rem 1rem;
+      font-size: 0.84rem;
+      line-height: 1.9;
+      color: #b8bed4;
+    }
+
+    .log-timestamp {
+      display: block;
+      font-size: 0.68rem;
+      color: var(--text-muted);
+      margin-bottom: 0.6rem;
+      letter-spacing: 0.12em;
+    }
+
+    /* Интерактивные повреждённые слова */
+    .glitch-word {
+      display: inline-block;
+      padding: 0.1rem 0.5rem;
+      margin: 0.08rem 0.12rem;
+      border-radius: 6px;
+      border: 1px dashed rgba(201, 59, 80, 0.75);
+      background: rgba(158, 42, 59, 0.18);
+      color: #f3aeb8;
+      font-family: var(--font-mono);
+      font-size: 0.82rem;
+      cursor: pointer;
+      vertical-align: baseline;
+      position: relative;
+      box-shadow: 0 0 14px rgba(158, 42, 59, 0.22);
+      animation: glitchPulse 2.2s ease-in-out infinite;
+      transition: all 0.3s ease;
+    }
+
+    .glitch-word:hover:not(.stabilized) {
+      border-color: var(--accent-cyan-bright);
+      background: rgba(122, 162, 184, 0.18);
+      color: var(--text-primary);
+      transform: translateY(-1px);
+    }
+
+    @keyframes glitchPulse {
+      0%, 100% { box-shadow: 0 0 10px rgba(158, 42, 59, 0.22); }
+      50% { box-shadow: 0 0 18px rgba(158, 42, 59, 0.45); }
+    }
+
+    .glitch-word.stabilized {
+      animation: none;
+      cursor: default;
+      border-style: solid;
+      border-color: rgba(122, 162, 184, 0.6);
+      background: rgba(122, 162, 184, 0.14);
+      color: var(--accent-cyan-bright);
+      box-shadow: 0 0 16px rgba(122, 162, 184, 0.22);
+    }
+
+    /* ==========================================================================
+       11. ФИНАЛ: РАСКРЫТИЕ ДАТЫ РЕЛИЗА И ПЛОЩАДКИ
+       ========================================================================== */
+    .reveal-flash {
+      position: fixed;
+      inset: 0;
+      z-index: 60;
+      pointer-events: none;
+      background: radial-gradient(circle, rgba(122, 162, 184, 0.24), rgba(5, 5, 8, 0.96));
+      opacity: 0;
+      transition: opacity 0.65s ease;
+    }
+
+    .reveal-flash.active {
+      opacity: 1;
+    }
+
+    .finale-hero {
+      text-align: center;
+      padding: 1.2rem 0.5rem 1.5rem;
+      border-bottom: 1px solid var(--border-subtle);
+      margin-bottom: 1.5rem;
+    }
+
+    .release-caption {
+      font-size: 0.72rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--text-soft);
+      margin-bottom: 0.85rem;
+    }
+
+    .release-date-display {
+      position: relative;
+      display: inline-block;
+      font-family: var(--font-mono);
+      font-weight: 500;
+      font-size: clamp(2.5rem, 11vw, 4.3rem);
+      letter-spacing: 0.16em;
+      color: var(--text-primary);
+      padding: 0.45rem 1.15rem;
+      border-radius: var(--radius-md);
+      background: rgba(7, 8, 14, 0.82);
+      border: 1px solid rgba(122, 162, 184, 0.36);
+      text-shadow:
+        -2px 0 rgba(158, 42, 59, 0.75),
+        2px 0 rgba(122, 162, 184, 0.75),
+        0 0 28px rgba(122, 162, 184, 0.35);
+      animation: dateBreathe 4.5s ease-in-out infinite;
+    }
+
+    @keyframes dateBreathe {
+      0%, 100% {
+        text-shadow:
+          -2px 0 rgba(158, 42, 59, 0.65),
+          2px 0 rgba(122, 162, 184, 0.65),
+          0 0 22px rgba(122, 162, 184, 0.25);
+      }
+      50% {
+        text-shadow:
+          -3px 0 rgba(201, 59, 80, 0.85),
+          3px 0 rgba(158, 200, 223, 0.85),
+          0 0 36px rgba(122, 162, 184, 0.45);
+      }
+    }
+
+    .release-note-sub {
+      margin-top: 0.85rem;
+      font-size: 0.74rem;
+      color: var(--text-muted);
+    }
+
+    .artist-letter {
+      font-family: var(--font-serif);
+      font-size: clamp(1.14rem, 3.8vw, 1.3rem);
+      line-height: 1.66;
+      color: #d7dbe8;
+      margin-bottom: 1.4rem;
+      padding: 1.1rem 1.15rem;
+      border-radius: var(--radius-md);
+      background: rgba(9, 10, 16, 0.65);
+      border-left: 2px solid var(--accent-crimson);
+    }
+
+    .artist-sign {
+      display: block;
+      margin-top: 0.75rem;
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      letter-spacing: 0.16em;
+      color: var(--accent-cyan);
+      text-transform: uppercase;
+    }
+
+    .finale-actions {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 0.75rem;
+      margin-bottom: 1.75rem;
+    }
+
+    /* Витрина музыкальных площадок */
+    .platforms-section-title {
+      font-size: 0.72rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--text-soft);
+      margin-bottom: 0.85rem;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+
+    .platforms-section-title::after {
+      content: "";
+      flex: 1;
+      height: 1px;
+      background: var(--border-subtle);
+    }
+
+    .platforms-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0.75rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .platform-card {
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      padding: 0.9rem 0.95rem;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border-subtle);
+      background: linear-gradient(145deg, rgba(18, 20, 30, 0.9), rgba(10, 11, 16, 0.95));
+      text-decoration: none;
+      color: var(--text-primary);
+      transition: all 0.26s ease;
+    }
+
+    .platform-card:hover {
+      border-color: var(--accent-cyan);
+      transform: translateY(-2px);
+      box-shadow: 0 10px 24px rgba(0, 0, 0, 0.45), 0 0 18px rgba(122, 162, 184, 0.16);
+    }
+
+    .platform-card.tg-highlight {
+      border-color: rgba(122, 162, 184, 0.4);
+    }
+
+    .platform-icon {
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      background: rgba(122, 162, 184, 0.1);
+      border: 1px solid rgba(122, 162, 184, 0.22);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      color: var(--accent-cyan-bright);
+    }
+
+    .platform-card.crimson-accent .platform-icon {
+      background: rgba(158, 42, 59, 0.14);
+      border-color: rgba(158, 42, 59, 0.35);
+      color: #e68292;
+    }
+
+    .platform-icon svg {
+      width: 20px;
+      height: 20px;
+    }
+
+    .platform-info {
+      min-width: 0;
+    }
+
+    .platform-name {
+      display: block;
+      font-size: 0.78rem;
+      font-weight: 500;
+      color: var(--text-primary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .platform-sub {
+      display: block;
+      font-size: 0.66rem;
+      color: var(--text-muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .replay-wrap {
+      text-align: center;
+      padding-top: 0.4rem;
+    }
+
+    /* ==========================================================================
+       12. МОДАЛЬНОЕ ОКНО ПЛАТФОРМ И TOAST-УВЕДОМЛЕНИЕ
+       ========================================================================== */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 50;
+      background: rgba(3, 3, 6, 0.78);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+
+    .modal-backdrop.open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .modal-panel {
+      width: 100%;
+      max-width: 440px;
+      background: var(--bg-surface-strong);
+      border: 1px solid rgba(122, 162, 184, 0.3);
+      border-radius: var(--radius-lg);
+      padding: 1.4rem 1.25rem;
+      box-shadow: 0 24px 64px rgba(0, 0, 0, 0.75);
+      transform: translateY(14px) scale(0.97);
+      transition: transform 0.32s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .modal-backdrop.open .modal-panel {
+      transform: translateY(0) scale(1);
+    }
+
+    .modal-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 0.9rem;
+    }
+
+    .modal-title {
+      font-family: var(--font-serif);
+      font-size: 1.55rem;
+      font-weight: 500;
+      color: var(--text-primary);
+    }
+
+    .modal-desc {
+      font-size: 0.74rem;
+      color: var(--text-soft);
+      margin-bottom: 1.15rem;
+    }
+
+    .modal-links {
+      display: flex;
+      flex-direction: column;
+      gap: 0.65rem;
+    }
+
+    /* Всплывающий тост */
+    .toast {
+      position: fixed;
+      bottom: 1.4rem;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      z-index: 70;
+      max-width: calc(100vw - 2rem);
+      padding: 0.75rem 1.1rem;
+      border-radius: var(--radius-md);
+      background: rgba(14, 17, 26, 0.96);
+      border: 1px solid var(--accent-cyan);
+      color: var(--text-primary);
+      font-size: 0.74rem;
+      letter-spacing: 0.04em;
+      text-align: center;
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.65), 0 0 18px var(--accent-cyan-glow);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease, transform 0.3s ease;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    /* ==========================================================================
+       13. АДАПТИВНОСТЬ ПОД МОБИЛЬНЫЕ ЭКРАНЫ И TELEGRAM IN-APP BROWSER
+       ========================================================================== */
+    @media (max-width: 540px) {
+      .top-bar-inner {
+        padding: 0.65rem 0.75rem;
+      }
+
+      .brand-mark {
+        font-size: 0.72rem;
+        letter-spacing: 0.16em;
+      }
+
+      .btn-label-hide-xs {
+        display: none;
+      }
+
+      .archive-card {
+        padding: 1.35rem 1.05rem;
+        border-radius: var(--radius-md);
+      }
+
+      .platforms-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .memory-pad {
+        min-height: 98px;
+      }
+    }
+
+    @media (min-width: 640px) {
+      .stage-wrapper {
+        padding: 2.2rem 1.25rem 4rem;
+      }
+
+      .archive-card {
+        padding: 2.2rem 2.1rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Анимированный фон с медленным ночным дождём и пеплом -->
+  <canvas id="bg-canvas" aria-hidden="true"></canvas>
+  <div class="analog-overlay" aria-hidden="true"></div>
+  <div class="film-flicker" aria-hidden="true"></div>
+  <div class="reveal-flash" id="reveal-flash" aria-hidden="true"></div>
+
+  <!-- Постоянная верхняя панель -->
+  <header class="top-bar">
+    <div class="top-bar-inner">
+      <div class="brand-mark" aria-label="TINYSHINEE">
+        <span class="status-dot" id="header-dot"></span>
+        <span>TINYSHINEE</span>
+      </div>
+
+      <div class="top-controls">
+        <span class="progress-pill" id="progress-indicator" aria-live="polite">00 / 04</span>
+
+        <button type="button" class="icon-btn" id="sound-toggle-btn" aria-label="Включить или выключить звук" title="Звук">
+          <svg id="sound-icon-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M11 5L6 9H2v6h4l5 4V5z"></path>
+            <line x1="23" y1="9" x2="17" y2="15"></line>
+            <line x1="17" y1="9" x2="23" y2="15"></line>
+          </svg>
+          <svg id="sound-icon-on" style="display:none;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M11 5L6 9H2v6h4l5 4V5z"></path>
+            <path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+            <path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>
+          </svg>
+          <span class="btn-label-hide-xs" id="sound-label">Звук</span>
+        </button>
+
+        <button type="button" class="icon-btn" id="open-platforms-btn" aria-label="Открыть музыкальные площадки">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 18V5l12-2v13"></path>
+            <circle cx="6" cy="18" r="3"></circle>
+            <circle cx="18" cy="16" r="3"></circle>
+          </svg>
+          <span>Платформы</span>
+        </button>
+      </div>
+    </div>
+    <div class="header-progress-track">
+      <div class="header-progress-fill" id="header-progress-fill"></div>
+    </div>
+  </header>
+
+  <!-- Основная сцена квеста -->
+  <main class="stage-wrapper">
+
+    <!-- ================================================================
+         ЭКРАН 0: ВХОД В АРХИВ (INTRO)
+         ================================================================ -->
+    <section class="stage active visible" id="stage-intro" aria-label="Вход в архив">
+      <div class="archive-card intro-card">
+        <div class="tape-emblem" aria-hidden="true">
+          <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#9ec8df" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M2 12h2"></path>
+            <path d="M6 8v8"></path>
+            <path d="M10 5v14"></path>
+            <path d="M14 9v6"></path>
+            <path d="M18 7v10"></path>
+            <path d="M22 12h-1"></path>
+          </svg>
+        </div>
+
+        <div class="meta-tag" style="justify-content:center;">
+          <span class="tag-accent">●</span>
+          <span>03:14 // ARCHIVE_DAMAGED</span>
+        </div>
+
+        <h1 class="intro-title">ПОТЕРЯННЫЙ СИГНАЛ</h1>
+        <div class="intro-sub-artist">TINYSHINEE // НОЧНОЙ АРХИВ</div>
+
+        <p class="intro-desc">
+          03:14. В архиве TINYSHINEE обнаружен повреждённый мастер-файл нового релиза. Восстанови память трека, чтобы узнать дату выхода.
+        </p>
+
+        <button type="button" class="btn-primary crimson" id="start-quest-btn">
+          <span>Восстановить сигнал</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+            <polyline points="12 5 19 12 12 19"></polyline>
+          </svg>
+        </button>
+
+        <p class="intro-footnote">Рекомендуется включить звук — синтезатор создаст ночную атмосферу</p>
+      </div>
+    </section>
+
+    <!-- ================================================================
+         АКТ I: «ШУМ И ТИШИНА» (ЧАСТОТНЫЙ ТЮНЕР)
+         ================================================================ -->
+    <section class="stage" id="stage-act1" aria-label="Акт I: Шум и Тишина">
+      <div class="archive-card">
+        <div class="meta-tag">
+          <span class="tag-accent">АКТ I</span>
+          <span>// ЭХО «НАЙДУ» // 03:22</span>
+        </div>
+
+        <h2 class="act-title">Шум и Тишина</h2>
+
+        <div class="story-block">
+          <p>
+            Когда рождалась <span class="story-track-ref">«Найду»</span>, казалось, что музыка — это попытка докричаться сквозь пустую ночную комнату. Но сегодня в студии всё иначе. За окном сырая темнота, монитор едва освещает стол, а в наушниках — только статический шум повреждённого проекта.
+          </p>
+          <p>
+            Где-то внутри этих помех всё ещё прячется первая честная нота нового трека. Нужно поймать её резонанс.
+          </p>
+        </div>
+
+        <div class="puzzle-box">
+          <div class="puzzle-caption">
+            <span>Настрой частоту, пока помехи не станут чистой волной</span>
+            <span>ДИАПАЗОН: 88.0 – 120.0 Hz</span>
+          </div>
+
+          <div class="osc-wrap">
+            <canvas id="osc-canvas"></canvas>
+            <div class="osc-hud">
+              <span class="freq-display" id="freq-value">94.2 Hz</span>
+              <span class="signal-status" id="signal-status">ПОМЕХИ</span>
+            </div>
+          </div>
+
+          <div class="lock-meter-wrap">
+            <div class="lock-meter-head">
+              <span>Стабилизация сигнала</span>
+              <span id="lock-percent">0%</span>
+            </div>
+            <div class="lock-meter-bar">
+              <div class="lock-meter-fill" id="lock-meter-fill"></div>
+            </div>
+          </div>
+
+          <div class="tuner-controls">
+            <button type="button" class="nudge-btn" id="freq-minus" aria-label="Уменьшить частоту">−</button>
+            <input
+              type="range"
+              class="freq-slider"
+              id="freq-slider"
+              min="88.0"
+              max="120.0"
+              step="0.1"
+              value="94.2"
+              aria-label="Настройка частоты в герцах"
+            />
+            <button type="button" class="nudge-btn" id="freq-plus" aria-label="Увеличить частоту">+</button>
+          </div>
+
+          <button type="button" class="btn-primary" id="lock-freq-btn" disabled>
+            Зафиксировать частоту
+          </button>
+
+          <div class="hint-area">
+            <button type="button" class="btn-ghost" data-hint-target="hint-act1">Подсказка</button>
+            <div class="hint-box" id="hint-act1">
+              Двигай ползунок выше 100 Hz и следи за волной: в районе <strong>108.4 Hz</strong> шум исчезнет, линия станет идеально ровной и мягко засветится. Задержись на секунду или нажми «Зафиксировать частоту».
+            </div>
+          </div>
+        </div>
+
+        <div class="diary-unlock" id="act1-unlock">
+          <div class="diary-label">
+            <span>● ДИКТОФОН ПРОДЮСЕРА // 03:27</span>
+          </div>
+          <p class="diary-text">
+            «Поймал. Тот самый холодный гул, с которого всё началось. Если „Найду“ была про поиск кого-то в темноте, то этот трек — про момент, когда остаёшься в ней один и наконец слышишь себя.»
+          </p>
+          <button type="button" class="btn-primary" id="to-act2-btn">
+            Перейти к Акту II →
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================================================================
+         АКТ II: «ПОСЛЕ ВСПЫШЕК» (ПЭДЫ ПАМЯТИ)
+         ================================================================ -->
+    <section class="stage" id="stage-act2" aria-label="Акт II: После вспышек">
+      <div class="archive-card">
+        <div class="meta-tag">
+          <span class="tag-accent">АКТ II</span>
+          <span>// КОНТРАСТ «RAVE» // 03:49</span>
+        </div>
+
+        <h2 class="act-title">После вспышек</h2>
+
+        <div class="story-block">
+          <p>
+            После <span class="story-track-ref">«Rave»</span> в голове ещё долго звенел отблеск стробоскопов и плотный ночной драйв. Но громкие ночи всегда заканчиваются одинаково — тяжёлой, вязкой тишиной перед рассветом, где всё звучит глубже и больнее.
+          </p>
+          <p>
+            Первая демка нового релиза сложилась сама собой именно в такой час: сначала за окном пошёл <span class="story-clue">дождь</span>, затем из колонок пробился приглушённый <span class="story-clue">пульс</span>, потом комната провалилась в резкую <span class="story-clue">тишину</span> — и только в конце осталось длинное <span class="story-clue">эхо</span>.
+          </p>
+        </div>
+
+        <div class="puzzle-box">
+          <div class="puzzle-caption">
+            <span>Собери хронологию той ночи на пэдах памяти</span>
+            <span id="pad-step-counter">ШАГ 0 / 4</span>
+          </div>
+
+          <div class="sequence-slots" aria-label="Последовательность шагов">
+            <div class="seq-slot" id="slot-0">01 · —</div>
+            <div class="seq-slot" id="slot-1">02 · —</div>
+            <div class="seq-slot" id="slot-2">03 · —</div>
+            <div class="seq-slot" id="slot-3">04 · —</div>
+          </div>
+
+          <!-- Расположение пэдов перемешано, чтобы игрок опирался на историю -->
+          <div class="pads-grid">
+            <button type="button" class="memory-pad" data-pad="pulse">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+              </svg>
+              <span class="pad-name">Пульс</span>
+              <span class="pad-sub">SUB · 118 BPM</span>
+            </button>
+
+            <button type="button" class="memory-pad" data-pad="echo">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="2"></circle>
+                <path d="M16.24 7.76a6 6 0 0 1 0 8.49"></path>
+                <path d="M7.76 16.24a6 6 0 0 1 0-8.49"></path>
+                <path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>
+                <path d="M4.93 19.07a10 10 0 0 1 0-14.14"></path>
+              </svg>
+              <span class="pad-name">Эхо</span>
+              <span class="pad-sub">REVERB · TAIL</span>
+            </button>
+
+            <button type="button" class="memory-pad" data-pad="rain">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"></path>
+              </svg>
+              <span class="pad-name">Дождь</span>
+              <span class="pad-sub">FIELD · 03:49</span>
+            </button>
+
+            <button type="button" class="memory-pad" data-pad="silence">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+              </svg>
+              <span class="pad-name">Тишина</span>
+              <span class="pad-sub">ROOM · ZERO</span>
+            </button>
+          </div>
+
+          <div class="pad-feedback" id="pad-feedback">Нажми на пэды в том порядке, в каком родилась демка.</div>
+
+          <div class="hint-area">
+            <button type="button" class="btn-ghost" data-hint-target="hint-act2">Прислушаться</button>
+            <div class="hint-box" id="hint-act2">
+              Порядок спрятан прямо в тексте: <strong>Дождь → Пульс → Тишина → Эхо</strong>.
+            </div>
+          </div>
+        </div>
+
+        <div class="diary-unlock" id="act2-unlock">
+          <div class="diary-label">
+            <span>● СТУДИЙНАЯ ЗАМЕТКА // 04:05</span>
+          </div>
+          <p class="diary-text">
+            «Убрал лишний напор. Никакой показной энергии — только честный ночной ритм, который бьётся где-то глубоко под рёбрами, когда вечеринка давно закончилась.»
+          </p>
+          <button type="button" class="btn-primary" id="to-act3-btn">
+            Перейти к Акту III →
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================================================================
+         АКТ III: «ЧЕРНОВИКИ В ПУСТОТУ» (ДЕШИФРОВКА ЛОГА)
+         ================================================================ -->
+    <section class="stage" id="stage-act3" aria-label="Акт III: Черновики в пустоту">
+      <div class="archive-card">
+        <div class="meta-tag">
+          <span class="tag-accent">АКТ III</span>
+          <span>// ИСТОРИЯ СОЗДАНИЯ // 04:38</span>
+        </div>
+
+        <h2 class="act-title">Черновики в пустоту</h2>
+
+        <div class="story-block">
+          <p>
+            Четыре утра. Десятки версий в папке «final_v7_really_final» улетели в корзину одна за другой. Чем больше эффектов я добавлял, тем дальше уходил от живого чувства.
+          </p>
+          <p>
+            В финальном мастере остались только три опоры, ради которых этот трек вообще стоило довести до конца. Но лента осыпается прямо сейчас.
+          </p>
+        </div>
+
+        <div class="puzzle-box">
+          <div class="integrity-row">
+            <span>Целостность мастер-ленты</span>
+            <span id="integrity-percent">25%</span>
+          </div>
+          <div class="integrity-bar">
+            <div class="integrity-fill" id="integrity-fill"></div>
+          </div>
+
+          <div class="log-terminal" id="log-terminal">
+            <span class="log-timestamp">[MASTER_LOG // 04:38:19 // TINYSHINEE_SESSION]</span>
+            Удалены 14 черновиков. Всё фальшивое стёрто. Если музыка не звучит правдиво в полной темноте — ей не место в релизе. Здесь важна только
+            <button type="button" class="glitch-word" data-word="честность" data-corrupt="█▓стн░сть">█▓стн░сть</button>,
+            та едва заметная точка опоры, похожая на
+            <button type="button" class="glitch-word" data-word="тихий свет" data-corrupt="т░х█й с▓ет">т░х█й с▓ет</button>
+            в окне напротив. От «Найду» до «Rave» и до этой ночи путь был один — не раствориться в шуме и
+            <button type="button" class="glitch-word" data-word="остаться собой" data-corrupt="о█т░ться с▓б█й">о█т░ться с▓б█й</button>.
+          </div>
+
+          <div class="hint-area">
+            <button type="button" class="btn-ghost" data-hint-target="hint-act3">Подсказка</button>
+            <div class="hint-box" id="hint-act3">
+              Коснись каждого из трёх мерцающих красных фрагментов в студийном логе, чтобы восстановить смысл и довести целостность ленты до 100%.
+            </div>
+          </div>
+        </div>
+
+        <div class="diary-unlock" id="act3-unlock">
+          <div class="diary-label">
+            <span>● МАСТЕР-ФАЙЛ СТАБИЛИЗИРОВАН // 100%</span>
+          </div>
+          <p class="diary-text">
+            «Все слои на месте. Повреждённая метка релиза расшифрована и готова к воспроизведению.»
+          </p>
+          <button type="button" class="btn-primary crimson" id="to-finale-btn">
+            Расшифровать дату релиза
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================================================================
+         ФИНАЛ: «СИГНАЛ ВОССТАНОВЛЕН» (ДАТА РЕЛИЗА + ПЛАТФОРМЫ)
+         ================================================================ -->
+    <section class="stage" id="stage-finale" aria-label="Финал: Сигнал восстановлен">
+      <div class="archive-card">
+        <div class="meta-tag" style="justify-content:center; width:100%;">
+          <span class="tag-accent">●</span>
+          <span>СИГНАЛ ВОССТАНОВЛЕН // MASTER_READY</span>
+        </div>
+
+        <div class="finale-hero">
+          <div class="release-caption">Дата выхода нового трека TINYSHINEE</div>
+          <div class="release-date-display" id="release-date-display">xx.x2.27</div>
+          <p class="release-note-sub">Некоторые цифры всё ещё скрыты ночным туманом — следи за шифрами в @tinyshinee</p>
+        </div>
+
+        <div class="artist-letter">
+          Спасибо, что прошёл этот ночной архив до конца. Этот трек — результат долгих бессонных часов между тишиной «Найду» и вспышками «Rave». В нём нет случайных звуков — только то, что остаётся в комнате, когда гаснет свет. До встречи в день релиза.
+          <span class="artist-sign">— TINYSHINEE // @tinyshinee</span>
+        </div>
+
+        <div class="finale-actions">
+          <button type="button" class="btn-primary crimson" id="copy-signal-btn">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+            </svg>
+            <span>Скопировать код сигнала</span>
+          </button>
+        </div>
+
+        <div class="platforms-section-title">Слушать TINYSHINEE</div>
+
+        <div class="platforms-grid" id="finale-platforms-grid">
+          <!-- Карточки площадок заполняются из ARTIST_CONFIG -->
+        </div>
+
+        <div class="replay-wrap">
+          <button type="button" class="btn-ghost" id="replay-btn">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="1 4 1 10 7 10"></polyline>
+              <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
+            </svg>
+            <span>Пройти архив заново</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Модальное окно музыкальных платформ -->
+  <div class="modal-backdrop" id="platforms-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title-text">
+    <div class="modal-panel">
+      <div class="modal-head">
+        <h3 class="modal-title" id="modal-title-text">Слушать TINYSHINEE</h3>
+        <button type="button" class="icon-btn" id="close-platforms-btn" aria-label="Закрыть окно">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+      <p class="modal-desc">Официальный канал и музыкальные площадки, где уже можно послушать «Найду», «Rave» и ждать новый релиз.</p>
+      <div class="modal-links" id="modal-platforms-list">
+        <!-- Ссылки заполняются из ARTIST_CONFIG -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Всплывающее уведомление -->
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    /* ==========================================================================
+       КОНФИГУРАЦИЯ АРТИСТА (МЕНЯЙ ССЫЛКИ И ДАТУ ЗДЕСЬ ПЕРЕД ЗАГРУЗКОЙ НА GITHUB)
+       ========================================================================== */
+    const ARTIST_CONFIG = {
+      releaseDate: "xx.x2.27",
+      telegramUrl: "https://t.me/tinyshinee",
+      yandexMusicUrl: "https://music.yandex.ru/", // Вставь ссылку на карточку TINYSHINEE
+      vkMusicUrl: "https://vk.com/music", // Вставь ссылку на VK Музыку
+      zvukUrl: "https://zvuk.com/" // Вставь ссылку на Звук
+    };
+
+    /* ==========================================================================
+       МЕТАДАННЫЕ ПЛОЩАДОК И КАСТОМНЫЕ SVG-ИКОНКИ
+       ========================================================================== */
+    const PLATFORM_ITEMS = [
+      {
+        key: "telegramUrl",
+        name: "Telegram",
+        sub: "@tinyshinee · канал",
+        highlight: true,
+        accent: "cyan",
+        svg: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13"></path><path d="M22 2l-7 20-4-9-9-4 20-7z"></path></svg>`
+      },
+      {
+        key: "yandexMusicUrl",
+        name: "Яндекс Музыка",
+        sub: "Карточка артиста",
+        highlight: false,
+        accent: "crimson",
+        svg: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><path d="M9.5 16V9.2l6-1.4V14.5"></path><circle cx="8.2" cy="16" r="1.4"></circle><circle cx="14.2" cy="14.5" r="1.4"></circle></svg>`
+      },
+      {
+        key: "vkMusicUrl",
+        name: "VK Музыка",
+        sub: "Треки и релизы",
+        highlight: false,
+        accent: "cyan",
+        svg: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="4"></rect><path d="M7.5 9.5c.3 3.2 2.1 5 4.8 5v-2.2c1.2.2 2 1 2.7 2.2h1.9c-.6-1.7-1.7-2.8-2.9-3.3 1.1-.6 2-1.6 2.5-2.7h-1.8c-.5 1-1.3 1.8-2.4 2.1V8.5h-1.7v4.1c-1.1-.3-1.8-1.4-2-3.1H7.5z"></path></svg>`
+      },
+      {
+        key: "zvukUrl",
+        name: "Звук",
+        sub: "HiFi-стриминг",
+        highlight: false,
+        accent: "crimson",
+        svg: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h2"></path><path d="M8 7v10"></path><path d="M12 4v16"></path><path d="M16 7v10"></path><path d="M20 12h-2"></path></svg>`
+      }
+    ];
+
+    /* ==========================================================================
+       АУДИО-ДВИЖОК (ПРОЦЕДУРНЫЙ WEB AUDIO API СИНТЕЗАТОР)
+       ========================================================================== */
+    class MelancholicAudioEngine {
+      constructor() {
+        this.ctx = null;
+        this.masterGain = null;
+        this.droneGain = null;
+        this.rainGain = null;
+        this.tunerStaticGain = null;
+        this.tunerToneOsc = null;
+        this.tunerToneGain = null;
+        this.isInitialized = false;
+        this.isMuted = true;
+        this.tunerActive = false;
+      }
+
+      /**
+       * Ленивая инициализация аудиоконтекста после первого клика пользователя.
+       */
+      init() {
+        if (this.isInitialized) return;
+        try {
+          const AudioCtx = window.AudioContext || window.webkitAudioContext;
+          if (!AudioCtx) return;
+
+          this.ctx = new AudioCtx();
+          this.masterGain = this.ctx.createGain();
+          this.masterGain.gain.value = 0.0001;
+          this.masterGain.connect(this.ctx.destination);
+
+          this._buildAmbientDrone();
+          this._buildVinylRainNoise();
+          this._buildTunerVoice();
+
+          this.isInitialized = true;
+          this.isMuted = false;
+          this._fadeMaster(0.55, 1.8);
+          this._syncUI();
+        } catch (err) {
+          console.warn("Audio init skipped:", err);
+        }
+      }
+
+      /**
+       * Тёплый меланхоличный минорный пэд (D minor 9) с медленным фильтром.
+       */
+      _buildAmbientDrone() {
+        const filter = this.ctx.createBiquadFilter();
+        filter.type = "lowpass";
+        filter.frequency.value = 420;
+        filter.Q.value = 1.4;
+
+        // Медленная модуляция среза фильтра (дыхание пэда)
+        const lfo = this.ctx.createOscillator();
+        const lfoGain = this.ctx.createGain();
+        lfo.frequency.value = 0.08;
+        lfoGain.gain.value = 160;
+        lfo.connect(lfoGain);
+        lfoGain.connect(filter.frequency);
+        lfo.start();
+
+        this.droneGain = this.ctx.createGain();
+        this.droneGain.gain.value = 0.14;
+        filter.connect(this.droneGain);
+        this.droneGain.connect(this.masterGain);
+
+        // Ноты аккорда Dm9: D2, A2, F3, E4
+        const freqs = [73.42, 110.0, 174.61, 329.63];
+        freqs.forEach((f, idx) => {
+          const osc = this.ctx.createOscillator();
+          osc.type = idx < 2 ? "triangle" : "sine";
+          osc.frequency.value = f;
+          osc.detune.value = (idx % 2 === 0 ? -5 : 6);
+          const voiceGain = this.ctx.createGain();
+          voiceGain.gain.value = idx < 2 ? 0.28 : 0.14;
+          osc.connect(voiceGain);
+          voiceGain.connect(filter);
+          osc.start();
+        });
+      }
+
+      /**
+       * Генератор мягкого ночного дождя и винилового потрескивания.
+       */
+      _buildVinylRainNoise() {
+        const bufferSize = this.ctx.sampleRate * 3;
+        const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+        const data = buffer.getChannelData(0);
+
+        let b0 = 0, b1 = 0, b2 = 0;
+        for (let i = 0; i < bufferSize; i++) {
+          const white = Math.random() * 2 - 1;
+          b0 = 0.997 * b0 + white * 0.029;
+          b1 = 0.985 * b1 + white * 0.032;
+          b2 = 0.950 * b2 + white * 0.048;
+          let sample = (b0 + b1 + b2) * 0.55;
+          // Редкий мягкий виниловый треск
+          if (Math.random() > 0.9994) {
+            sample += (Math.random() - 0.5) * 0.55;
+          }
+          data[i] = sample;
+        }
+
+        const noise = this.ctx.createBufferSource();
+        noise.buffer = buffer;
+        noise.loop = true;
+
+        const bandpass = this.ctx.createBiquadFilter();
+        bandpass.type = "bandpass";
+        bandpass.frequency.value = 950;
+        bandpass.Q.value = 0.7;
+
+        this.rainGain = this.ctx.createGain();
+        this.rainGain.gain.value = 0.065;
+
+        noise.connect(bandpass);
+        bandpass.connect(this.rainGain);
+        this.rainGain.connect(this.masterGain);
+        noise.start();
+      }
+
+      /**
+       * Выделенный голосовой канал для Акта I (помехи -> чистая гармоника).
+       */
+      _buildTunerVoice() {
+        // Помехи тюнера
+        const bufSize = this.ctx.sampleRate * 2;
+        const buf = this.ctx.createBuffer(1, bufSize, this.ctx.sampleRate);
+        const out = buf.getChannelData(0);
+        for (let i = 0; i < bufSize; i++) {
+          out[i] = (Math.random() * 2 - 1) * 0.45;
+        }
+        const staticSrc = this.ctx.createBufferSource();
+        staticSrc.buffer = buf;
+        staticSrc.loop = true;
+
+        const hp = this.ctx.createBiquadFilter();
+        hp.type = "bandpass";
+        hp.frequency.value = 1800;
+        hp.Q.value = 1.8;
+
+        this.tunerStaticGain = this.ctx.createGain();
+        this.tunerStaticGain.gain.value = 0.0;
+
+        staticSrc.connect(hp);
+        hp.connect(this.tunerStaticGain);
+        this.tunerStaticGain.connect(this.masterGain);
+        staticSrc.start();
+
+        // Чистая резонансная синусоида
+        this.tunerToneOsc = this.ctx.createOscillator();
+        this.tunerToneOsc.type = "sine";
+        this.tunerToneOsc.frequency.value = 216.8;
+        this.tunerToneGain = this.ctx.createGain();
+        this.tunerToneGain.gain.value = 0.0;
+
+        this.tunerToneOsc.connect(this.tunerToneGain);
+        this.tunerToneGain.connect(this.masterGain);
+        this.tunerToneOsc.start();
+      }
+
+      /**
+       * Обновляет звучание тюнера в Акте I в зависимости от близости к 108.4 Hz.
+       * @param {number} closeness Значение от 0 (далеко) до 1 (точное попадание).
+       */
+      updateTunerSound(closeness) {
+        if (!this.isInitialized || this.isMuted || !this.tunerActive) return;
+        try {
+          const now = this.ctx.currentTime;
+          const staticLvl = Math.max(0.002, (1 - closeness) * 0.055);
+          const toneLvl = Math.pow(closeness, 2.2) * 0.11;
+          const targetFreq = 216.8 + (1 - closeness) * 28;
+
+          this.tunerStaticGain.gain.setTargetAtTime(staticLvl, now, 0.06);
+          this.tunerToneGain.gain.setTargetAtTime(toneLvl, now, 0.06);
+          this.tunerToneOsc.frequency.setTargetAtTime(targetFreq, now, 0.06);
+        } catch (err) {
+          // Игнорируем возможные ограничения контекста
+        }
+      }
+
+      setTunerActive(active) {
+        this.tunerActive = active;
+        if (!this.isInitialized) return;
+        try {
+          const now = this.ctx.currentTime;
+          if (!active) {
+            this.tunerStaticGain.gain.setTargetAtTime(0, now, 0.18);
+            this.tunerToneGain.gain.setTargetAtTime(0, now, 0.18);
+          }
+        } catch (err) {}
+      }
+
+      /**
+       * Проигрывает мягкую одиночную ноту для UI-взаимодействий или пэдов.
+       */
+      playNote(freq, duration = 1.1, type = "sine", volume = 0.16) {
+        if (!this.isInitialized || this.isMuted) return;
+        try {
+          const now = this.ctx.currentTime;
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          const filter = this.ctx.createBiquadFilter();
+
+          osc.type = type;
+          osc.frequency.setValueAtTime(freq, now);
+
+          filter.type = "lowpass";
+          filter.frequency.setValueAtTime(1400, now);
+          filter.frequency.exponentialRampToValueAtTime(280, now + duration);
+
+          gain.gain.setValueAtTime(0.0001, now);
+          gain.gain.linearRampToValueAtTime(volume, now + 0.03);
+          gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+
+          osc.connect(filter);
+          filter.connect(gain);
+          gain.connect(this.masterGain);
+
+          osc.start(now);
+          osc.stop(now + duration + 0.05);
+        } catch (err) {}
+      }
+
+      /**
+       * Мягкий глухой сигнал ошибки.
+       */
+      playError() {
+        this.playNote(118, 0.35, "triangle", 0.16);
+        setTimeout(() => this.playNote(98, 0.42, "triangle", 0.14), 90);
+      }
+
+      /**
+       * Гармоничный отклик при успешном шаге или разблокировке.
+       */
+      playUnlockChord() {
+        const notes = [293.66, 349.23, 440.0, 523.25]; // Dm7
+        notes.forEach((n, i) => {
+          setTimeout(() => this.playNote(n, 1.8, "sine", 0.11), i * 110);
+        });
+      }
+
+      /**
+       * Глубокий разрешающий финальный аккорд (Dm9) для раскрытия даты релиза.
+       */
+      playFinaleChord() {
+        const notes = [146.83, 220.0, 261.63, 329.63, 349.23, 440.0];
+        notes.forEach((n, i) => {
+          setTimeout(() => this.playNote(n, 3.6, i < 2 ? "triangle" : "sine", 0.11), i * 140);
+        });
+      }
+
+      toggleMute() {
+        if (!this.isInitialized) {
+          this.init();
+          return;
+        }
+        try {
+          if (this.ctx.state === "suspended") {
+            this.ctx.resume();
+          }
+          this.isMuted = !this.isMuted;
+          this._fadeMaster(this.isMuted ? 0.0001 : 0.55, 0.35);
+          this._syncUI();
+        } catch (err) {}
+      }
+
+      _fadeMaster(target, seconds) {
+        if (!this.ctx || !this.masterGain) return;
+        const now = this.ctx.currentTime;
+        this.masterGain.gain.cancelScheduledValues(now);
+        this.masterGain.gain.setValueAtTime(Math.max(0.0001, this.masterGain.gain.value), now);
+        this.masterGain.gain.exponentialRampToValueAtTime(Math.max(0.0001, target), now + seconds);
+      }
+
+      _syncUI() {
+        const btn = document.getElementById("sound-toggle-btn");
+        const iconOff = document.getElementById("sound-icon-off");
+        const iconOn = document.getElementById("sound-icon-on");
+        const label = document.getElementById("sound-label");
+        if (!btn) return;
+
+        if (!this.isMuted && this.isInitialized) {
+          btn.classList.add("sound-on");
+          iconOff.style.display = "none";
+          iconOn.style.display = "block";
+          if (label) label.textContent = "Звук вкл";
+        } else {
+          btn.classList.remove("sound-on");
+          iconOff.style.display = "block";
+          iconOn.style.display = "none";
+          if (label) label.textContent = "Звук";
+        }
+      }
+    }
+
+    const audioEngine = new MelancholicAudioEngine();
+
+    /* ==========================================================================
+       ФОНОВЫЙ CANVAS: МЕДЛЕННЫЙ НОЧНОЙ ДОЖДЬ И ПЕПЕЛ
+       ========================================================================== */
+    function initBackgroundCanvas() {
+      const canvas = document.getElementById("bg-canvas");
+      if (!canvas) return;
+      const ctx = canvas.getContext("2d");
+
+      let width = 0;
+      let height = 0;
+      let particles = [];
+
+      function resize() {
+        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+        width = window.innerWidth;
+        height = window.innerHeight;
+        canvas.width = Math.floor(width * dpr);
+        canvas.height = Math.floor(height * dpr);
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+        const count = Math.min(72, Math.max(32, Math.floor(width / 16)));
+        particles = Array.from({ length: count }, () => createParticle(true));
+      }
+
+      function createParticle(randomY = false) {
+        const isRain = Math.random() > 0.42;
+        return {
+          isRain,
+          x: Math.random() * width,
+          y: randomY ? Math.random() * height : -20,
+          vx: isRain ? -0.25 - Math.random() * 0.25 : (Math.random() - 0.5) * 0.28,
+          vy: isRain ? 0.9 + Math.random() * 1.4 : 0.18 + Math.random() * 0.35,
+          len: isRain ? 10 + Math.random() * 16 : 0,
+          r: isRain ? 0 : 0.8 + Math.random() * 1.6,
+          alpha: 0.08 + Math.random() * 0.24,
+          tint: Math.random() > 0.88 ? "158, 42, 59" : "122, 162, 184"
+        };
+      }
+
+      function draw() {
+        ctx.clearRect(0, 0, width, height);
+        for (let i = 0; i < particles.length; i++) {
+          const p = particles[i];
+          p.x += p.vx;
+          p.y += p.vy;
+
+          if (p.y > height + 24 || p.x < -20 || p.x > width + 20) {
+            particles[i] = createParticle(false);
+            continue;
+          }
+
+          if (p.isRain) {
+            ctx.beginPath();
+            ctx.strokeStyle = `rgba(${p.tint}, ${p.alpha})`;
+            ctx.lineWidth = 1;
+            ctx.moveTo(p.x, p.y);
+            ctx.lineTo(p.x + p.vx * 4, p.y + p.len);
+            ctx.stroke();
+          } else {
+            ctx.beginPath();
+            ctx.fillStyle = `rgba(${p.tint}, ${p.alpha * 0.85})`;
+            ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        }
+        requestAnimationFrame(draw);
+      }
+
+      window.addEventListener("resize", resize);
+      resize();
+      requestAnimationFrame(draw);
+    }
+
+    /* ==========================================================================
+       УПРАВЛЕНИЕ СОСТОЯНИЕМ КВЕСТА И ПЕРЕХОДАМИ
+       ========================================================================== */
+    const STAGE_MAP = {
+      intro:  { id: "stage-intro",  step: "00 / 04", progress: 0 },
+      act1:   { id: "stage-act1",   step: "01 / 04", progress: 25 },
+      act2:   { id: "stage-act2",   step: "02 / 04", progress: 50 },
+      act3:   { id: "stage-act3",   step: "03 / 04", progress: 75 },
+      finale: { id: "stage-finale", step: "04 / 04", progress: 100 }
+    };
+
+    let currentStage = "intro";
+
+    /**
+     * Плавное переключение между экранами квеста.
+     */
+    function goToStage(stageKey) {
+      const prevEl = document.getElementById(STAGE_MAP[currentStage].id);
+      const nextConf = STAGE_MAP[stageKey];
+      const nextEl = document.getElementById(nextConf.id);
+      if (!nextEl || stageKey === currentStage) return;
+
+      // Отключаем звучание тюнера при уходе из Акта I
+      if (currentStage === "act1") {
+        audioEngine.setTunerActive(false);
+      }
+
+      prevEl.classList.remove("visible");
+      setTimeout(() => {
+        prevEl.classList.remove("active");
+        nextEl.classList.add("active");
+
+        // Обновляем индикаторы шапки
+        document.getElementById("progress-indicator").textContent = nextConf.step;
+        document.getElementById("header-progress-fill").style.width = nextConf.progress + "%";
+
+        const dot = document.getElementById("header-dot");
+        if (stageKey === "finale") {
+          dot.classList.add("restored");
+        } else {
+          dot.classList.remove("restored");
+        }
+
+        window.scrollTo({ top: 0, behavior: "smooth" });
+
+        requestAnimationFrame(() => {
+          nextEl.classList.add("visible");
+          if (stageKey === "act1") {
+            act1Controller.onEnter();
+          }
+        });
+      }, 320);
+
+      currentStage = stageKey;
+    }
+
+    /* ==========================================================================
+       АКТ I: КОНТРОЛЛЕР ЧАСТОТНОГО ТЮНЕРА И ОСЦИЛЛОГРАФА
+       ========================================================================== */
+    const act1Controller = (() => {
+      const TARGET_FREQ = 108.4;
+      const TOLERANCE = 0.6;
+      const LOCK_HOLD_MS = 1050;
+
+      const canvas = document.getElementById("osc-canvas");
+      const ctx = canvas.getContext("2d");
+      const slider = document.getElementById("freq-slider");
+      const minusBtn = document.getElementById("freq-minus");
+      const plusBtn = document.getElementById("freq-plus");
+      const freqLabel = document.getElementById("freq-value");
+      const statusLabel = document.getElementById("signal-status");
+      const lockPercentEl = document.getElementById("lock-percent");
+      const lockFillEl = document.getElementById("lock-meter-fill");
+      const lockBtn = document.getElementById("lock-freq-btn");
+      const unlockBox = document.getElementById("act1-unlock");
+
+      let currentFreq = 94.2;
+      let solved = false;
+      let holdStart = null;
+      let phase = 0;
+      let rafId = null;
+      let cw = 300;
+      let ch = 155;
+
+      function resizeCanvas() {
+        const rect = canvas.parentElement.getBoundingClientRect();
+        if (rect.width === 0) return;
+        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+        cw = rect.width;
+        ch = rect.height;
+        canvas.width = Math.floor(cw * dpr);
+        canvas.height = Math.floor(ch * dpr);
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      }
+
+      function getCloseness() {
+        const diff = Math.abs(currentFreq - TARGET_FREQ);
+        return Math.max(0, 1 - diff / 14);
+      }
+
+      function isInLockZone() {
+        return Math.abs(currentFreq - TARGET_FREQ) <= TOLERANCE;
+      }
+
+      function updateReadout() {
+        freqLabel.textContent = currentFreq.toFixed(1) + " Hz";
+        const closeness = getCloseness();
+        const inZone = isInLockZone();
+
+        if (solved) {
+          freqLabel.classList.add("locked");
+          statusLabel.textContent = "СИГНАЛ ЗАФИКСИРОВАН";
+          statusLabel.className = "signal-status locked";
+          lockPercentEl.textContent = "100%";
+          lockFillEl.style.width = "100%";
+          lockBtn.disabled = true;
+          lockBtn.textContent = "Частота зафиксирована · 108.4 Hz";
+          return;
+        }
+
+        audioEngine.updateTunerSound(closeness);
+
+        if (inZone) {
+          freqLabel.classList.add("locked");
+          statusLabel.textContent = "РЕЗОНАНС НАЙДЕН";
+          statusLabel.className = "signal-status locked";
+          lockBtn.disabled = false;
+        } else if (closeness > 0.72) {
+          freqLabel.classList.remove("locked");
+          statusLabel.textContent = "ПОЧТИ ЧИСТО";
+          statusLabel.className = "signal-status near";
+          lockBtn.disabled = true;
+          holdStart = null;
+        } else {
+          freqLabel.classList.remove("locked");
+          statusLabel.textContent = "ПОМЕХИ";
+          statusLabel.className = "signal-status";
+          lockBtn.disabled = true;
+          holdStart = null;
+        }
+      }
+
+      function completeAct1() {
+        if (solved) return;
+        solved = true;
+        currentFreq = TARGET_FREQ;
+        slider.value = TARGET_FREQ.toFixed(1);
+        slider.disabled = true;
+        minusBtn.disabled = true;
+        plusBtn.disabled = true;
+
+        audioEngine.setTunerActive(false);
+        audioEngine.playUnlockChord();
+        updateReadout();
+        unlockBox.classList.add("show");
+      }
+
+      function drawOscilloscope(timestamp) {
+        if (currentStage !== "act1") {
+          rafId = null;
+          return;
+        }
+
+        ctx.clearRect(0, 0, cw, ch);
+
+        const closeness = solved ? 1 : getCloseness();
+        const inZone = solved || isInLockZone();
+        const noiseAmp = (1 - closeness) * 34;
+        const waveAmp = 14 + closeness * 24;
+        const cycles = 2.4 + (1 - closeness) * 4.5;
+
+        // Автоматическая фиксация при удержании в зоне резонанса ~1 сек
+        if (!solved) {
+          if (inZone) {
+            if (!holdStart) holdStart = timestamp;
+            const elapsed = timestamp - holdStart;
+            const ratio = Math.min(1, elapsed / LOCK_HOLD_MS);
+            const meterPct = Math.round(78 + ratio * 22);
+            lockPercentEl.textContent = meterPct + "%";
+            lockFillEl.style.width = meterPct + "%";
+            if (elapsed >= LOCK_HOLD_MS) {
+              completeAct1();
+            }
+          } else {
+            const basePct = Math.round(closeness * 76);
+            lockPercentEl.textContent = basePct + "%";
+            lockFillEl.style.width = basePct + "%";
+          }
+        }
+
+        // Центральная ось
+        ctx.beginPath();
+        ctx.strokeStyle = "rgba(108, 114, 138, 0.2)";
+        ctx.lineWidth = 1;
+        ctx.moveTo(0, ch / 2);
+        ctx.lineTo(cw, ch / 2);
+        ctx.stroke();
+
+        // Основная волна
+        ctx.beginPath();
+        ctx.lineWidth = inZone ? 2.4 : 1.7;
+        ctx.strokeStyle = inZone ? "#9ec8df" : (closeness > 0.72 ? "#d6b67c" : "#c93b50");
+        ctx.shadowColor = inZone ? "rgba(158, 200, 223, 0.7)" : "rgba(201, 59, 80, 0.45)";
+        ctx.shadowBlur = inZone ? 14 : 6;
+
+        const steps = 110;
+        for (let i = 0; i <= steps; i++) {
+          const x = (i / steps) * cw;
+          const norm = i / steps;
+          // Затухание амплитуды к краям экрана
+          const envelope = Math.sin(norm * Math.PI);
+          const sine = Math.sin(norm * Math.PI * 2 * cycles + phase) * waveAmp;
+          const jitter = (Math.sin(i * 19.3 + phase * 5.2) * 0.5 + (Math.random() - 0.5)) * noiseAmp;
+          const y = ch / 2 + (sine + jitter) * envelope;
+
+          if (i === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        }
+        ctx.stroke();
+        ctx.shadowBlur = 0;
+
+        phase += inZone ? 0.055 : 0.11;
+        rafId = requestAnimationFrame(drawOscilloscope);
+      }
+
+      function setFreq(val) {
+        if (solved) return;
+        currentFreq = Math.min(120, Math.max(88, Math.round(val * 10) / 10));
+        slider.value = currentFreq.toFixed(1);
+        updateReadout();
+      }
+
+      slider.addEventListener("input", (e) => setFreq(parseFloat(e.target.value)));
+      minusBtn.addEventListener("click", () => setFreq(currentFreq - 0.2));
+      plusBtn.addEventListener("click", () => setFreq(currentFreq + 0.2));
+      lockBtn.addEventListener("click", () => {
+        if (isInLockZone()) completeAct1();
+      });
+
+      window.addEventListener("resize", () => {
+        if (currentStage === "act1") resizeCanvas();
+      });
+
+      return {
+        onEnter() {
+          resizeCanvas();
+          if (!solved) {
+            audioEngine.setTunerActive(true);
+            updateReadout();
+          }
+          if (!rafId) rafId = requestAnimationFrame(drawOscilloscope);
+        },
+        reset() {
+          solved = false;
+          holdStart = null;
+          currentFreq = 94.2;
+          slider.disabled = false;
+          minusBtn.disabled = false;
+          plusBtn.disabled = false;
+          slider.value = "94.2";
+          lockBtn.textContent = "Зафиксировать частоту";
+          lockBtn.disabled = true;
+          unlockBox.classList.remove("show");
+          updateReadout();
+        }
+      };
+    })();
+
+    /* ==========================================================================
+       АКТ II: КОНТРОЛЛЕР ПЭДОВ ПАМЯТИ
+       ========================================================================== */
+    const act2Controller = (() => {
+      const TARGET_SEQ = ["rain", "pulse", "silence", "echo"];
+      const PAD_META = {
+        rain:    { label: "Дождь",  freq: 293.66, type: "sine" },     // D4
+        pulse:   { label: "Пульс",  freq: 349.23, type: "triangle" }, // F4
+        silence: { label: "Тишина", freq: 440.00, type: "sine" },     // A4
+        echo:    { label: "Эхо",    freq: 523.25, type: "sine" }      // C5
+      };
+
+      const pads = Array.from(document.querySelectorAll(".memory-pad"));
+      const slots = [0, 1, 2, 3].map((i) => document.getElementById(`slot-${i}`));
+      const counterEl = document.getElementById("pad-step-counter");
+      const feedbackEl = document.getElementById("pad-feedback");
+      const unlockBox = document.getElementById("act2-unlock");
+
+      let stepIndex = 0;
+      let solved = false;
+      let isResetting = false;
+
+      function updateSlotsUI() {
+        counterEl.textContent = `ШАГ ${stepIndex} / 4`;
+        slots.forEach((slot, idx) => {
+          slot.classList.remove("error");
+          if (idx < stepIndex) {
+            const key = TARGET_SEQ[idx];
+            slot.textContent = `0${idx + 1} · ${PAD_META[key].label}`;
+            slot.classList.add("filled");
+          } else {
+            slot.textContent = `0${idx + 1} · —`;
+            slot.classList.remove("filled");
+          }
+        });
+      }
+
+      function handlePadTap(padEl) {
+        if (solved || isResetting) return;
+        const key = padEl.dataset.pad;
+        const meta = PAD_META[key];
+
+        // Визуальная вспышка пэда
+        padEl.classList.add("lit");
+        setTimeout(() => padEl.classList.remove("lit"), 240);
+
+        if (key === TARGET_SEQ[stepIndex]) {
+          audioEngine.playNote(meta.freq, 1.35, meta.type, 0.17);
+          padEl.classList.add("confirmed");
+          stepIndex += 1;
+          updateSlotsUI();
+
+          if (stepIndex === TARGET_SEQ.length) {
+            solved = true;
+            feedbackEl.textContent = "Ритм той ночи восстановлен.";
+            feedbackEl.className = "pad-feedback ok";
+            pads.forEach((p) => (p.disabled = true));
+            setTimeout(() => {
+              audioEngine.playUnlockChord();
+              unlockBox.classList.add("show");
+            }, 340);
+          } else {
+            feedbackEl.textContent = `Принято: «${meta.label}». Что пришло следом?`;
+            feedbackEl.className = "pad-feedback";
+          }
+        } else {
+          // Неверный шаг — мягкий сброс последовательности
+          isResetting = true;
+          audioEngine.playError();
+          padEl.classList.add("wrong");
+          slots[stepIndex].classList.add("error");
+          feedbackEl.textContent = "Память сбилась. Вспомни, с чего началась та ночь.";
+          feedbackEl.className = "pad-feedback err";
+
+          setTimeout(() => {
+            padEl.classList.remove("wrong");
+            pads.forEach((p) => p.classList.remove("confirmed"));
+            stepIndex = 0;
+            updateSlotsUI();
+            isResetting = false;
+          }, 680);
+        }
+      }
+
+      pads.forEach((pad) => {
+        pad.addEventListener("click", () => handlePadTap(pad));
+      });
+
+      return {
+        reset() {
+          solved = false;
+          isResetting = false;
+          stepIndex = 0;
+          pads.forEach((p) => {
+            p.disabled = false;
+            p.classList.remove("confirmed", "wrong", "lit");
+          });
+          feedbackEl.textContent = "Нажми на пэды в том порядке, в каком родилась демка.";
+          feedbackEl.className = "pad-feedback";
+          unlockBox.classList.remove("show");
+          updateSlotsUI();
+        }
+      };
+    })();
+
+    /* ==========================================================================
+       АКТ III: ДЕШИФРОВКА ПОВРЕЖДЁННЫХ СЛОВ В СТУДИЙНОМ ЛОГЕ
+       ========================================================================== */
+    const act3Controller = (() => {
+      const words = Array.from(document.querySelectorAll(".glitch-word"));
+      const percentEl = document.getElementById("integrity-percent");
+      const fillEl = document.getElementById("integrity-fill");
+      const unlockBox = document.getElementById("act3-unlock");
+      const GLITCH_CHARS = "█▓▒░#@%!?";
+      const NOTES = [329.63, 392.0, 523.25]; // E4, G4, C5
+
+      let restoredCount = 0;
+
+      function animateDecrypt(btn, finalWord) {
+        let frame = 0;
+        const maxFrames = 8;
+        const timer = setInterval(() => {
+          frame++;
+          if (frame >= maxFrames) {
+            clearInterval(timer);
+            btn.textContent = finalWord;
+            return;
+          }
+          let out = "";
+          for (let i = 0; i < finalWord.length; i++) {
+            if (i / finalWord.length < frame / maxFrames || finalWord[i] === " ") {
+              out += finalWord[i];
+            } else {
+              out += GLITCH_CHARS[Math.floor(Math.random() * GLITCH_CHARS.length)];
+            }
+          }
+          btn.textContent = out;
+        }, 42);
+      }
+
+      words.forEach((btn) => {
+        btn.addEventListener("click", () => {
+          if (btn.classList.contains("stabilized")) return;
+          btn.classList.add("stabilized");
+          btn.setAttribute("aria-pressed", "true");
+
+          const targetWord = btn.dataset.word;
+          animateDecrypt(btn, targetWord);
+          audioEngine.playNote(NOTES[restoredCount] || 440, 1.4, "sine", 0.16);
+
+          restoredCount += 1;
+          const pct = 25 + restoredCount * 25;
+          percentEl.textContent = pct + "%";
+          fillEl.style.width = pct + "%";
+
+          if (restoredCount === words.length) {
+            setTimeout(() => {
+              audioEngine.playUnlockChord();
+              unlockBox.classList.add("show");
+            }, 420);
+          }
+        });
+      });
+
+      return {
+        reset() {
+          restoredCount = 0;
+          percentEl.textContent = "25%";
+          fillEl.style.width = "25%";
+          unlockBox.classList.remove("show");
+          words.forEach((btn) => {
+            btn.classList.remove("stabilized");
+            btn.removeAttribute("aria-pressed");
+            btn.textContent = btn.dataset.corrupt;
+          });
+        }
+      };
+    })();
+
+    /* ==========================================================================
+       РЕНДЕРИНГ ПЛАТФОРМ, КОПИРОВАНИЕ КОДА СИГНАЛА И ТОСТ-УВЕДОМЛЕНИЯ
+       ========================================================================== */
+    function renderPlatforms() {
+      const finaleGrid = document.getElementById("finale-platforms-grid");
+      const modalList = document.getElementById("modal-platforms-list");
+
+      const html = PLATFORM_ITEMS.map((item) => {
+        const href = ARTIST_CONFIG[item.key] || "#";
+        const extraClass = [
+          item.highlight ? "tg-highlight" : "",
+          item.accent === "crimson" ? "crimson-accent" : ""
+        ].join(" ").trim();
+
+        return `
+          <a class="platform-card ${extraClass}" href="${href}" target="_blank" rel="noopener noreferrer">
+            <span class="platform-icon" aria-hidden="true">${item.svg}</span>
+            <span class="platform-info">
+              <span class="platform-name">${item.name}</span>
+              <span class="platform-sub">${item.sub}</span>
+            </span>
+          </a>
+        `;
+      }).join("");
+
+      if (finaleGrid) finaleGrid.innerHTML = html;
+      if (modalList) modalList.innerHTML = html;
+    }
+
+    let toastTimer = null;
+    function showToast(message) {
+      const toast = document.getElementById("toast");
+      if (!toast) return;
+      toast.textContent = message;
+      toast.classList.add("show");
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => {
+        toast.classList.remove("show");
+      }, 3200);
+    }
+
+    /**
+     * Надёжное копирование текста (работает в Telegram WebView и iFrame).
+     */
+    function copySignalCode() {
+      const shareText = `Сигнал TINYSHINEE восстановлен. Дата: ${ARTIST_CONFIG.releaseDate} 🖤 t.me/tinyshinee`;
+      try {
+        const textarea = document.createElement("textarea");
+        textarea.value = shareText;
+        textarea.setAttribute("readonly", "");
+        textarea.style.position = "fixed";
+        textarea.style.left = "-9999px";
+        textarea.style.top = "0";
+        document.body.appendChild(textarea);
+        textarea.focus();
+        textarea.select();
+        const ok = document.execCommand("copy");
+        document.body.removeChild(textarea);
+
+        if (ok) {
+          audioEngine.playNote(523.25, 0.7, "sine", 0.12);
+          showToast("Код сигнала скопирован — отправь его в @tinyshinee");
+        } else {
+          showToast(`Код: ${shareText}`);
+        }
+      } catch (err) {
+        showToast(`Код: ${shareText}`);
+      }
+    }
+
+    /* ==========================================================================
+       ИНИЦИАЛИЗАЦИЯ ИНТЕРФЕЙСА И ПРИВЯЗКА СОБЫТИЙ
+       ========================================================================== */
+    function initApp() {
+      // Подставляем дату релиза из ARTIST_CONFIG
+      const dateDisplay = document.getElementById("release-date-display");
+      if (dateDisplay) {
+        dateDisplay.textContent = ARTIST_CONFIG.releaseDate;
+      }
+
+      renderPlatforms();
+      initBackgroundCanvas();
+
+      // Кнопка старта квеста (инициализирует Web Audio API)
+      document.getElementById("start-quest-btn").addEventListener("click", () => {
+        audioEngine.init();
+        audioEngine.playNote(293.66, 1.2, "sine", 0.14);
+        goToStage("act1");
+      });
+
+      // Кнопка звука в шапке
+      document.getElementById("sound-toggle-btn").addEventListener("click", () => {
+        audioEngine.toggleMute();
+      });
+
+      // Переходы между актами
+      document.getElementById("to-act2-btn").addEventListener("click", () => {
+        audioEngine.playNote(329.63, 0.9, "sine", 0.12);
+        goToStage("act2");
+      });
+
+      document.getElementById("to-act3-btn").addEventListener("click", () => {
+        audioEngine.playNote(349.23, 0.9, "sine", 0.12);
+        goToStage("act3");
+      });
+
+      // Драматический переход к финалу с раскрытием даты
+      document.getElementById("to-finale-btn").addEventListener("click", () => {
+        const flash = document.getElementById("reveal-flash");
+        flash.classList.add("active");
+        audioEngine.playFinaleChord();
+        setTimeout(() => {
+          goToStage("finale");
+          setTimeout(() => flash.classList.remove("active"), 420);
+        }, 380);
+      });
+
+      // Копирование кода сигнала
+      document.getElementById("copy-signal-btn").addEventListener("click", copySignalCode);
+
+      // Пройти архив заново
+      document.getElementById("replay-btn").addEventListener("click", () => {
+        act1Controller.reset();
+        act2Controller.reset();
+        act3Controller.reset();
+        document.querySelectorAll(".hint-box").forEach((b) => b.classList.remove("open"));
+        audioEngine.playNote(220, 1.0, "sine", 0.12);
+        goToStage("intro");
+      });
+
+      // Переключатели подсказок
+      document.querySelectorAll("[data-hint-target]").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const target = document.getElementById(btn.dataset.hintTarget);
+          if (target) target.classList.toggle("open");
+        });
+      });
+
+      // Модальное окно музыкальных платформ
+      const modal = document.getElementById("platforms-modal");
+      const openModalBtn = document.getElementById("open-platforms-btn");
+      const closeModalBtn = document.getElementById("close-platforms-btn");
+
+      openModalBtn.addEventListener("click", () => modal.classList.add("open"));
+      closeModalBtn.addEventListener("click", () => modal.classList.remove("open"));
+      modal.addEventListener("click", (e) => {
+        if (e.target === modal) modal.classList.remove("open");
+      });
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape" && modal.classList.contains("open")) {
+          modal.classList.remove("open");
+        }
+      });
+    }
+
+    window.addEventListener("load", initApp);
+  </script>
+</body>
+</html>
